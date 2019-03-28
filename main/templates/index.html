@@ -1,0 +1,205 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset="utf-8">
+		<link rel="icon" href="https://onedrive.live.com/favicon.ico">
+        <title>OneDrive Duplicate Finder</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<link
+			rel="stylesheet"
+			href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css"
+			integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
+			crossorigin="anonymous"
+		>
+    </head>
+    <body>
+		<!-- Main content -->
+		<div class="container mt-3">
+			<h1>OneDrive Duplicate Finder</h1>
+			<div class="row">
+				<div class="col">
+					<p>
+						This tool connects to your personal Microsoft OneDrive
+						or OneDrive for Business account and looks for files
+						that are duplicates. Two files are considered duplicate
+						when they have the same SHA-1 hash (for personal
+						accounts) or the same
+						<a href="https://docs.microsoft.com/en-us/onedrive/developer/code-snippets/quickxorhash">
+							QuickXorHash 
+						</a> (for OneDrive for Business accounts).
+					</p>
+				</div>
+				<div class="col">
+					<!-- Authorization status -->
+					{%- if is_authorized %}
+					<div class="alert alert-info">
+						<p>
+							You are signed in. Click the following button to
+							sign out:
+						</p>
+						<p>
+							<a href="{{ url_for('.handle_logout') }}" class="btn btn-danger">
+								Sign Out
+							</a>
+						</p>
+						<p class="mb-0">
+							If you sign out, the scan results will be
+							discarded.
+						</p>
+					</div>
+					{%- else %}
+					<div class="alert alert-info">
+						<p>
+							Click the following button to authorize with OneDrive and
+							to start looking for duplicate files within your account:
+						</p>
+						<form method="post">
+							{{ authorize_form.authorize(class_="btn btn-primary") }}
+							{{ authorize_form.hidden_tag() }}
+						</form>
+					</div>
+					{%- endif %}
+				</div>
+			</div>
+			<!-- Alerts -->
+			{#- The valid categories for flashes are:
+				- primary
+				- secondary
+				- success
+				- danger
+				- warning
+				- info
+				- light
+				- dark
+				They are the valid alert types from Bootstrap.
+			#}
+			{%- for category, message in get_flashed_messages(with_categories=true) %}
+			<div
+				class="
+					alert
+					alert-{{ category|e }}
+					alert-dismissible
+					fade
+					show"
+				role="alert"
+			>
+				{{ message|e }}
+				<button
+					type="button"
+					class="close"
+					data-dismiss="alert"
+					aria-label="Close"
+				>
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			{%- endfor %}
+			<!-- Error message -->
+			{%- if error %}
+			<div class="alert alert-danger">
+				<p>{{ error|e }}</p>
+				<p>URL:</p>
+				<pre>{{ api_last_url|e }}</pre>
+				<p>API response:</p>
+				<pre class="mb-0">{{ api_last_result|e }}</pre>
+			</div>
+			{%- endif %}
+			<!-- Scan output -->
+			{%- if scan %}
+			<h2>Scan Progress</h2>
+			<p>
+				Hash type
+				<span id="hash-type">{{ scan.hash_type|e }}</span>
+				in use.
+				{{ humanfriendly.format_number(scan.num_discovered_folders) }}
+				folder{% if scan.num_discovered_folders != 1 %}s{% endif %}
+				discovered.
+				{{ humanfriendly.format_number(scan.num_scanned_files) }}
+				file{% if scan.num_scanned_files != 1 %}s{% endif %}
+				scanned totaling
+				{{ humanfriendly.format_size(
+                    scan.total_bytes_scanned_files,
+                    binary=True
+                ) }}.
+			</p>
+			{%- if scan.complete %}
+			<div class="alert alert-success">
+				<p class="mb-0">The scan has completed.</p>
+			</div>
+			{%- else %}
+			<div class="alert alert-warning">
+				<p class="mb-0">
+					The scan is still in progress. Please try not to modify
+					anything on OneDrive until the scan is complete, or the
+					results may be incorrect.
+				</p>
+			</div>
+			{%- endif %}
+			<h3>Duplicate files</h3>
+			{%- set duplicates = scan.get_duplicates()|list %}
+			<div class="row">
+				<div class="col">
+					<p>
+						{{ duplicates|length }}
+						set(s) of duplicates found
+					</p>
+				</div>
+				<div class="col text-right">
+					<a
+						href="{{ url_for('.handle_results_json')|e }}"
+						class="btn btn-primary"
+					>Download JSON</a>
+				</div>
+			</div>
+			<p>Files within each set are duplicates of each other.</p>
+			{%- for file_list in duplicates %}
+			<div class="card card-body mb-1">
+				<ul class="duplicate-file-set mb-0">
+					{%- for file in file_list %}
+					<li>
+						<a class="file-name" href="{{ file.url|e }}" target="_blank">
+							{{ file.name|e }}
+						</a>
+						from
+						<span class="file-parent-path font-weight-bold">
+							{{ file.parent_path|e }}
+						</span>
+					</li>
+					{%- endfor %}
+				</ul>
+			</div>
+			{%- endfor %}
+			{%- endif %}
+			<!-- Attribution -->
+			<p class="mt-3">
+				See the source code for this project on GitHub:
+				<a href="https://github.com/wecsam/onedrive-duplicate-finder">
+					https://github.com/wecsam/onedrive-duplicate-finder
+				</a>
+			</p>
+			<p>
+				This project was created by David Tsai. See my main website:
+				<a href="https://www.wecsam.com/">https://www.wecsam.com/</a>
+			</p>
+		</div>
+		<!-- Bootstrap -->
+		<script
+			src="https://code.jquery.com/jquery-3.3.1.min.js"
+			type="text/javascript"
+			integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js"
+			type="text/javascript"
+			integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut"
+			crossorigin="anonymous"
+		></script>
+		<script
+			src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"
+			type="text/javascript"
+			integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"
+			crossorigin="anonymous"
+		></script>
+    </body>
+</html>

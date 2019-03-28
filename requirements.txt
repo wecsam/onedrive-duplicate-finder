@@ -1,0 +1,6 @@
+attrs>=19.1.0
+Flask>=1.0.2
+Flask-WTF>=0.14.2
+humanfriendly>=4.18
+requests-oauthlib>=1.2.0
+urllib3>=1.24.1

@@ -50,8 +50,9 @@ def handle_root():
                     break
                 try:
                     scan.step()
-                except KeyError:
-                    error = "The API response could not be parsed."
+                except KeyError as e:
+                    error = "The API response could not be parsed because " \
+                        "the {!r} key was missing.".format(e.args[0])
                 if error:
                     break
         except oauthlib.oauth2.rfc6749.errors.TokenExpiredError:

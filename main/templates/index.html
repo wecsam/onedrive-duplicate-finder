@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
 		<link rel="icon" href="https://onedrive.live.com/favicon.ico">
-        <title>OneDrive Duplicate Finder</title>
+        <title>OneDrive Duplicate File Finder</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<link
 			rel="stylesheet"
@@ -15,7 +15,7 @@
     <body>
 		<!-- Main content -->
 		<div class="container mt-3">
-			<h1>OneDrive Duplicate Finder</h1>
+			<h1>OneDrive Duplicate File Finder</h1>
 			<div class="row">
 				<div class="col">
 					<p>
@@ -28,6 +28,7 @@
 							QuickXorHash 
 						</a> (for OneDrive for Business accounts).
 					</p>
+					<p>During the scan, the page reloads repeatedly.</p>
 				</div>
 				<div class="col">
 					<!-- Authorization status -->
@@ -94,16 +95,6 @@
 				</button>
 			</div>
 			{%- endfor %}
-			<!-- Error message -->
-			{%- if error %}
-			<div class="alert alert-danger">
-				<p>{{ error|e }}</p>
-				<p>URL:</p>
-				<pre>{{ api_last_url|e }}</pre>
-				<p>API response:</p>
-				<pre class="mb-0">{{ api_last_result|e }}</pre>
-			</div>
-			{%- endif %}
 			<!-- Scan output -->
 			{%- if scan %}
 			<h2>Scan Progress</h2>
@@ -122,16 +113,24 @@
                     binary=True
                 ) }}.
 			</p>
-			{%- if scan.complete %}
+			{%- if error %}
+			<div class="alert alert-danger">
+				<p>{{ error|e }}</p>
+				<p>URL:</p>
+				<pre>{{ api_last_url|e }}</pre>
+				<p>API response:</p>
+				<pre class="mb-0">{{ api_last_result|e }}</pre>
+			</div>
+			{%- elif scan.complete %}
 			<div class="alert alert-success">
 				<p class="mb-0">The scan has completed.</p>
 			</div>
 			{%- else %}
 			<div class="alert alert-warning">
 				<p class="mb-0">
-					The scan is still in progress. Please try not to modify
-					anything on OneDrive until the scan is complete, or the
-					results may be incorrect.
+					The scan is in progress. Please try not to modify anything
+					on OneDrive until the scan is complete, or the results may
+					be incorrect.
 				</p>
 			</div>
 			{%- endif %}

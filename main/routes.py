@@ -38,7 +38,8 @@ def handle_root():
     # by entering some URL accidentally.
     scan = None
     error = None
-    api_last_result = None
+    error_api_url = None
+    error_api_response = None
     if onedrive.is_authorized():
         try:
             scan = get_scan()
@@ -50,9 +51,11 @@ def handle_root():
                     break
                 try:
                     scan.step()
-                except KeyError as e:
+                except onedrive.APIKeyError as e:
                     error = "The API response could not be parsed because " \
                         "the {!r} key was missing.".format(e.args[0])
+                    error_api_url = e.args[1]
+                    error_api_response = e.args[2]
                 if error:
                     break
         except oauthlib.oauth2.rfc6749.errors.TokenExpiredError:
@@ -60,9 +63,8 @@ def handle_root():
                 "Please restart the scan by signing out and back in."
         # In an error condition, show the API response to the user.
         if error:
-            api_last_result = onedrive.get_last_result()
             try:
-                api_last_result = json.dumps(api_last_result, indent=4)
+                error_api_response = json.dumps(error_api_response, indent=4)
             except:
                 pass
         else:
@@ -75,8 +77,8 @@ def handle_root():
             is_authorized=onedrive.is_authorized(),
             scan=scan,
             error=error,
-            api_last_url=onedrive.get_last_url(),
-            api_last_result=api_last_result
+            error_api_url=error_api_url,
+            error_api_response=error_api_response
         )
     )
     # Refresh if the scan is not complete. We need to do this because the code

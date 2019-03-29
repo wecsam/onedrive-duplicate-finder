@@ -117,9 +117,9 @@
 			<div class="alert alert-danger">
 				<p>{{ error|e }}</p>
 				<p>URL:</p>
-				<pre>{{ api_last_url|e }}</pre>
+				<pre>{{ error_api_url|e }}</pre>
 				<p>API response:</p>
-				<pre class="mb-0">{{ api_last_result|e }}</pre>
+				<pre class="mb-0">{{ error_api_response|e }}</pre>
 			</div>
 			{%- elif scan.complete %}
 			<div class="alert alert-success">

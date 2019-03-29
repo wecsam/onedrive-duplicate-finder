@@ -12,6 +12,7 @@ _ONEDRIVE_PATH_SUFFIX = \
     "/children?select=id,name,size,webUrl,parentReference,file,folder"
 
 class NotAuthorized(Exception): pass
+class APIKeyError(KeyError): pass
 
 def _set_token(token):
     flask.session["oauth_token"] = token
@@ -73,12 +74,6 @@ def _fetch_json(url):
     _last_result = _get_oauth_session().get(url).json()
     return _last_result
 
-def get_last_url():
-    return _last_url
-
-def get_last_result():
-    return _last_result
-
 def is_personal():
     '''
     Returns True if the signed-in Microsoft user is a personal Microsoft
@@ -115,42 +110,46 @@ def get_children(url, add_folder_url):
             # This folder no longer exists.
             return
     # Iterate through the children.
-    for child in api_response["value"]:
-        id = child["id"]
-        name = child["name"]
-        size = child.get("size", 0)
-        url = child["webUrl"]
-        parent_id = child["parentReference"]["id"]
-        parent_path = urllib.parse.unquote(child["parentReference"]["path"])
-        folder = child.get("folder")
-        if folder:
-            # This is a folder.
-            yield file_tree.Folder(
-                id=id,
-                name=name,
-                size=size,
-                url=url,
-                parent_id=parent_id,
-                parent_path=parent_path,
-                child_count=folder["childCount"]
-            )
-        else:
-            file = child.get("file")
-            if file:
-                # This is a file.
-                hashes = file.get("hashes")
-                if hashes is None:
-                    hashes = {}
-                yield file_tree.File(
+    try:
+        for child in api_response["value"]:
+            id = child["id"]
+            name = child["name"]
+            size = child.get("size", 0)
+            url = child["webUrl"]
+            parent_id = child["parentReference"]["id"]
+            parent_path = \
+                urllib.parse.unquote(child["parentReference"]["path"])
+            folder = child.get("folder")
+            if folder:
+                # This is a folder.
+                yield file_tree.Folder(
                     id=id,
                     name=name,
                     size=size,
                     url=url,
                     parent_id=parent_id,
                     parent_path=parent_path,
-                    mime_type=file.get("mimeType", ""),
-                    hashes=hashes
+                    child_count=folder["childCount"]
                 )
+            else:
+                file = child.get("file")
+                if file:
+                    # This is a file.
+                    hashes = file.get("hashes")
+                    if hashes is None:
+                        hashes = {}
+                    yield file_tree.File(
+                        id=id,
+                        name=name,
+                        size=size,
+                        url=url,
+                        parent_id=parent_id,
+                        parent_path=parent_path,
+                        mime_type=file.get("mimeType", ""),
+                        hashes=hashes
+                    )
+    except KeyError as e:
+        raise APIKeyError(*e.args, url, api_response)
     # If there are more children on another page, pass the next page's URL.
     try:
         next_link = api_response["@odata.nextLink"]

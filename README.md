@@ -4,6 +4,13 @@ This is a simple application to find files that have the exact same contents in
 the user's account on Microsoft OneDrive. It works by finding files that have
 identical SHA-1 hashes.
 
+## Dependency installation
+
+This web app was built for Python 3.6 with the Flask microframework. To install
+required libraries, run:
+
+    pip install -r requirements.txt
+
 ## Configuration for development
 
 These instructions are for Windows only. Instructions for other operating

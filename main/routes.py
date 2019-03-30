@@ -23,8 +23,12 @@ def get_scan():
 @app.route(settings_loader.get_oauth_callback_path())
 def handle_callback():
     # Handle an OAuth callback. Retrieve and store an access token.
-    onedrive.handle_callback()
-    flask.flash("You were successfully authorized.", "success")
+    try:
+        onedrive.handle_callback()
+    except oauthlib.oauth2.rfc6749.errors.MissingCodeError:
+        flask.flash("The sign-in was canceled.", "danger")
+    else:
+        flask.flash("You were successfully signed in.", "success")
     return flask.redirect(flask.url_for(".handle_root"))
 
 @app.route("/", methods=("GET", "POST"))

@@ -207,10 +207,11 @@ class DuplicateFileScan:
         with self._lock:
             self._num_scanned_files += 1
             self._total_bytes_scanned_files += file.size
-        # Add this file to the list of files with the same hash.
+        # Add this file to the list of files with the same hash. Include the
+        # file size in the hash to reduce the chance of a collision.
         hash = file.hashes.get(self._hash_type)
         with self._lock:
-            self._files_with_hash[hash].append(file)
+            self._files_with_hash[(file.size, hash)].append(file)
     def _process_folder_children(self, child_generator):
         '''
         Arguments:

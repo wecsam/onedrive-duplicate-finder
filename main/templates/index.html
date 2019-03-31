@@ -159,6 +159,7 @@
 						<a class="file-name" href="{{ file.url|e }}" target="_blank">
 							{{ file.name|e }}
 						</a>
+						({{ humanfriendly.format_size(file.size, binary=True) }})
 						from
 						<span class="file-parent-path font-weight-bold">
 							{{ file.parent_path|e }}

@@ -4,7 +4,10 @@ import flask, flask_wtf, humanfriendly, os
 app = flask.Flask(__name__)
 
 from . import settings_loader
-app.secret_key = settings_loader.settings["APP_SECRET_KEY"]
+app.config.update(
+    SECRET_KEY=settings_loader.settings["APP_SECRET_KEY"],
+    SESSION_COOKIE_SECURE=app.config.get("ENV") != "development"
+)
 app.jinja_env.filters.update(list=list)
 app.jinja_env.globals.update(humanfriendly=humanfriendly)
 csrf = flask_wtf.csrf.CSRFProtect(app)
